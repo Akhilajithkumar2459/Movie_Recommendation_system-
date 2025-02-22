@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Recommendation System</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            background: url('https://analyticsindiamag.com/wp-content/uploads/2019/05/apps.55787.9007199266246365.687a10a8-4c4a-4a47-8ec5-a95f70d8852d.jpg') no-repeat center center fixed;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        .movies-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 20px;
+        }
+        .movie {
+            margin: 15px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            transition: transform 0.3s ease-in-out;
+        }
+        .movie:hover {
+            transform: scale(1.1);
+        }
+        .movie img {
+            width: 200px;
+            border-radius: 10px;
+            display: block;
+            margin: 0 auto;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background-color: #222;
+        }
+        .search-bar {
+            text-align: center;
+            margin: 20px;
+        }
+        .search-bar input {
+            width: 50%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: #333;
+            color: white;
+        }
+        header {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0));
+        }
+        h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: red;
+        }
+        button {
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: darkred;
+        }
+    </style>
+</head>
+<body>
+    <header class="text-center py-5">
+        <h1>Movie Recommendation System</h1>
+        <p>Click on a movie to see related recommendations</p>
+        <button onclick="fetchMovies()">Home</button>
+    </header>
+    
+    <div class="search-bar">
+        <input type="text" id="search" placeholder="Search for a movie..." onkeyup="searchMovies()">
+    </div>
+    
+    <div class="movies-container" id="movies-list"></div>
+    
+    <footer class="footer">
+        <p>&copy; 2025 Movie Recommendation System</p>
+    </footer>
+    
+    <script>
+        let allMovies = [];
+
+        function fetchMovies() {
+            fetch("/movies")
+                .then(response => response.json())
+                .then(data => {
+                    allMovies = data;
+                    displayMovies(allMovies);
+                })
+                .catch(error => console.error("Error fetching movies:", error));
+        }
+
+        function displayMovies(movies) {
+            const moviesList = document.getElementById("movies-list");
+            moviesList.innerHTML = "";
+            movies.forEach(movie => {
+                const movieElement = document.createElement("div");
+                movieElement.classList.add("movie");
+                movieElement.innerHTML = `<p>${movie.title}</p>`;
+                movieElement.onclick = () => fetchRecommendations(movie.title);
+                moviesList.appendChild(movieElement);
+            });
+        }
+
+        function searchMovies() {
+            let input = document.getElementById("search").value.toLowerCase();
+            let filteredMovies = allMovies.filter(movie => movie.title.toLowerCase().includes(input));
+            displayMovies(filteredMovies);
+        }
+
+        function fetchRecommendations(movieTitle) {
+            fetch(`/recommend/${movieTitle}`)
+                .then(response => response.json())
+                .then(data => {
+                    const moviesList = document.getElementById("movies-list");
+                    moviesList.innerHTML = "<h2>Recommended Movies</h2>";
+                    data.forEach(movie => {
+                        const movieElement = document.createElement("div");
+                        movieElement.classList.add("movie");
+                        movieElement.innerHTML = `
+                            <img src="${movie.poster}" alt="${movie.title}">
+                            <p><strong>${movie.title}</strong></p>
+                            <p><em>Release Date:</em> ${movie.release_date}</p>
+                            <p><em>Rating:</em> ${movie.rating}</p>
+                            <p><em>Overview:</em> ${movie.overview}</p>
+                        `;
+                        movieElement.onclick = () => fetchRecommendations(movie.title);
+                        moviesList.appendChild(movieElement);
+                    });
+                })
+                .catch(error => console.error("Error fetching recommendations:", error));
+        }
+
+        document.addEventListener("DOMContentLoaded", fetchMovies);
+    </script>
+</body>
+</html>
